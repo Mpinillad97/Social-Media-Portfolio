@@ -1,40 +1,35 @@
-import About from './components/About.tsx'
-import ClosingBand from './components/ClosingBand.tsx'
-import Contact from './components/Contact.tsx'
-import Faq from './components/Faq.tsx'
+import { useEffect } from 'react'
+import { Route, Routes, useLocation } from 'react-router'
 import Footer from './components/Footer.tsx'
-import Hero from './components/Hero.tsx'
-import HowIWork from './components/HowIWork.tsx'
 import Navbar from './components/Navbar.tsx'
-import Portfolio from './components/Portfolio.tsx'
-import WhatIBring from './components/WhatIBring.tsx'
-import WhatIDo from './components/WhatIDo.tsx'
+import Home from './pages/Home.tsx'
+import ProjectDetail from './pages/ProjectDetail.tsx'
+
+// New pages start at the top; in-page anchors (e.g. /#portafolio) scroll to their target.
+function ScrollManager() {
+  const { pathname, hash } = useLocation()
+
+  useEffect(() => {
+    if (hash) {
+      document.getElementById(hash.slice(1))?.scrollIntoView()
+    } else {
+      window.scrollTo(0, 0)
+    }
+  }, [pathname, hash])
+
+  return null
+}
 
 function App() {
   return (
     <>
+      <ScrollManager />
       <Navbar />
-      <main>
-        <Hero />
-        {/* One continuous white panel over the checkerboard; all portfolio sections live inside it. */}
-        <div className="content-panel">
-          <About />
-          <hr className="section-divider" />
-          <Portfolio />
-          <hr className="section-divider" />
-          <WhatIDo />
-          <hr className="section-divider" />
-          <WhatIBring />
-          <hr className="section-divider" />
-          <HowIWork />
-        </div>
-        {/* New stage: a full-width warm surface after the checkerboard margin. */}
-        <div className="closing">
-          <ClosingBand />
-          <Faq />
-          <Contact />
-        </div>
-      </main>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/proyectos/:slug" element={<ProjectDetail />} />
+        <Route path="*" element={<Home />} />
+      </Routes>
       <Footer />
     </>
   )

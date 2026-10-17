@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router'
 import { PROJECTS, type Project } from '../data/projects.ts'
 import SectionEyebrow from './SectionEyebrow.tsx'
 
@@ -59,9 +60,9 @@ function Portfolio() {
         {PROJECTS.map((project) => (
           <li key={project.slug} className="portfolio-item">
             {project.href ? (
-              <a href={project.href} className="folder">
+              <Link to={project.href} className="folder">
                 <FolderArt project={project} />
-              </a>
+              </Link>
             ) : (
               // No detail page yet: the folder opens its preview instead of linking.
               <button

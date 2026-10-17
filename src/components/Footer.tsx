@@ -31,8 +31,9 @@ function Footer() {
   // Scroll to the top, then move keyboard focus to the main heading so it follows along.
   function backToTop() {
     window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' })
-    const heading = document.getElementById('hero-title')
-    if (heading) {
+    // The page's main heading: the hero title at home, the project name on detail pages.
+    const heading = document.querySelector('main h1')
+    if (heading instanceof HTMLElement) {
       heading.setAttribute('tabindex', '-1')
       heading.focus({ preventScroll: true })
     }

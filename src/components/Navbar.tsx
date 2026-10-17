@@ -1,4 +1,5 @@
 import { useMotionValueEvent, useReducedMotion, useScroll } from 'motion/react'
+import { useLocation } from 'react-router'
 import {
   useEffect,
   useId,
@@ -29,7 +30,9 @@ function getIsDesktop() {
   return window.matchMedia(desktopQuery).matches
 }
 
-function getProgress(scrollY: number, reduceMotion: boolean) {
+function getProgress(scrollY: number, reduceMotion: boolean, pinned: boolean) {
+  // Pages without the hero (e.g. project pages) keep the floating pill at all times.
+  if (pinned) return 1
   const progress = Math.min(Math.max(scrollY / MORPH_DISTANCE, 0), 1)
   // With reduced motion, switch states at the threshold instead of interpolating.
   if (reduceMotion) return progress >= COMPACT_AT ? 1 : 0
@@ -40,8 +43,10 @@ function Navbar() {
   const reduceMotion = useReducedMotion() ?? false
   const isDesktop = useSyncExternalStore(subscribeToDesktop, getIsDesktop)
   const { scrollY } = useScroll()
+  // Only the home page has the hero the navbar morphs over.
+  const pinned = useLocation().pathname !== '/'
   const [initialProgress] = useState(() =>
-    getProgress(window.scrollY, reduceMotion),
+    getProgress(window.scrollY, reduceMotion, pinned),
   )
   const [compact, setCompact] = useState(initialProgress >= COMPACT_AT)
   const [menuOpen, setMenuOpen] = useState(false)
@@ -53,7 +58,7 @@ function Navbar() {
   // Scroll updates write the progress straight to the DOM, so React only re-renders when
   // the navbar crosses the compact threshold.
   useMotionValueEvent(scrollY, 'change', (y) => {
-    const next = getProgress(y, reduceMotion)
+    const next = getProgress(y, reduceMotion, pinned)
     headerRef.current?.style.setProperty('--nav-progress', String(next))
     const nextCompact = next >= COMPACT_AT
     if (nextCompact !== compact) {
@@ -62,9 +67,18 @@ function Navbar() {
     }
   })
 
+  // Re-sync when the route changes, since a page change may not scroll at all.
+  useEffect(() => {
+    const next = getProgress(scrollY.get(), reduceMotion, pinned)
+    headerRef.current?.style.setProperty('--nav-progress', String(next))
+    const frame = requestAnimationFrame(() => setCompact(next >= COMPACT_AT))
+    return () => cancelAnimationFrame(frame)
+  }, [pinned, reduceMotion, scrollY])
+
+  const isCompact = pinned || compact
   // On mobile the menu button is always available; on desktop only in the pill state.
-  const linksAvailable = isDesktop && !compact
-  const menuAvailable = !isDesktop || compact
+  const linksAvailable = isDesktop && !isCompact
+  const menuAvailable = !isDesktop || isCompact
   const showMenu = menuOpen && menuAvailable
 
   useEffect(() => {

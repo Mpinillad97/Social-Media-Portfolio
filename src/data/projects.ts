@@ -2,8 +2,8 @@ import placeholderA from '../assets/projects/preview-placeholder-a.svg'
 import placeholderB from '../assets/projects/preview-placeholder-b.svg'
 
 /*
- * Portfolio projects. Single source of truth for the home page folders and, later,
- * the project detail pages. Edit names, categories, previews and destinations here.
+ * Portfolio projects. Single source of truth for the home page folders and the project
+ * detail pages. Edit names, categories, previews, posts and destinations here.
  */
 
 export type ProjectPreview = {
@@ -13,8 +13,42 @@ export type ProjectPreview = {
   provisional: boolean
 }
 
+/** Format of a featured social post; sets the media proportions. */
+export type SocialPostFormat = 'image' | 'reel' | 'carousel'
+
+export type SocialMedia = {
+  /** Image URL, or the video URL for a reel. */
+  src: string
+  alt: string
+  /** Optional still frame shown before a reel plays. */
+  poster?: string
+}
+
+export type SocialPost = {
+  id: string
+  format: SocialPostFormat
+  /**
+   * The brand account that published the post. Null until confirmed: the header then
+   * shows a clearly provisional state instead of an invented account.
+   */
+  account: {
+    name: string
+    /** Brand avatar or logo. */
+    avatar?: string
+    /** Only true when the account really is verified on the platform. */
+    verified: boolean
+  } | null
+  /**
+   * The real media. Empty means the post is still pending and a "Vista previa
+   * pendiente" state is shown in its exact proportions.
+   */
+  media: SocialMedia[]
+  /** The real caption, or null to omit the caption area. */
+  caption: string | null
+}
+
 export type Project = {
-  /** Stable identifier; also the future detail page path, e.g. /proyectos/<slug>. */
+  /** Stable identifier; also the detail page path, /proyectos/<slug>. */
   slug: string
   name: string
   category: string
@@ -23,10 +57,9 @@ export type Project = {
   /** Confirmed short context, or null until it is provided. */
   description: string | null
   previews: [ProjectPreview, ProjectPreview]
-  /**
-   * Detail page URL. Null until that page exists: the folder then only opens its
-   * preview instead of linking somewhere that doesn't exist yet.
-   */
+  /** Featured posts on the detail page; replace the pending ones with real content. */
+  posts: SocialPost[]
+  /** Detail page URL. */
   href: string | null
 }
 
@@ -46,8 +79,21 @@ function placeholderPreviews(name: string): [ProjectPreview, ProjectPreview] {
   ]
 }
 
+// A pending featured post: no account, media or caption until the real ones arrive.
+function pendingPost(slug: string): SocialPost {
+  return {
+    id: `${slug}-post-1`,
+    format: 'image',
+    account: null,
+    media: [],
+    caption: null,
+  }
+}
+
 // Neutral temporary label for projects whose category isn't confirmed yet.
 const PENDING_CATEGORY = 'Proyecto creativo'
+
+const projectPath = (slug: string) => `/proyectos/${slug}`
 
 export const PROJECTS: Project[] = [
   {
@@ -57,7 +103,8 @@ export const PROJECTS: Project[] = [
     categoryProvisional: true,
     description: null,
     previews: placeholderPreviews('Cliquea Excel Studio'),
-    href: null,
+    posts: [pendingPost('cliquea-excel-studio')],
+    href: projectPath('cliquea-excel-studio'),
   },
   {
     slug: 'universidad-del-norte',
@@ -67,7 +114,8 @@ export const PROJECTS: Project[] = [
     description:
       'Asistente de comunicaciones del programa de Comunicación Social.',
     previews: placeholderPreviews('Universidad del Norte'),
-    href: null,
+    posts: [pendingPost('universidad-del-norte')],
+    href: projectPath('universidad-del-norte'),
   },
   {
     slug: 'das-parfum',
@@ -76,7 +124,8 @@ export const PROJECTS: Project[] = [
     categoryProvisional: true,
     description: null,
     previews: placeholderPreviews('Das Parfum'),
-    href: null,
+    posts: [pendingPost('das-parfum')],
+    href: projectPath('das-parfum'),
   },
   {
     slug: 'que-lee-bookclub',
@@ -85,7 +134,8 @@ export const PROJECTS: Project[] = [
     categoryProvisional: true,
     description: null,
     previews: placeholderPreviews('Que Lee Bookclub'),
-    href: null,
+    posts: [pendingPost('que-lee-bookclub')],
+    href: projectPath('que-lee-bookclub'),
   },
   {
     slug: 'andila-group',
@@ -94,6 +144,10 @@ export const PROJECTS: Project[] = [
     categoryProvisional: true,
     description: null,
     previews: placeholderPreviews('Andila Group'),
-    href: null,
+    posts: [pendingPost('andila-group')],
+    href: projectPath('andila-group'),
   },
 ]
+
+export const findProject = (slug: string | undefined) =>
+  PROJECTS.find((project) => project.slug === slug)
