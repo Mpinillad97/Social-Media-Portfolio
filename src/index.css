@@ -12,6 +12,13 @@
   --hero-petal: #f6dade;
   --hero-sand: #e6d3bf;
   --hero-taupe: #cfb8a3;
+  --marquee-bg: #f3d6db;
+  --folder-back: #e7b3be;
+  --folder-front: #f3cfd6;
+  --paper: #fffaf4;
+  --surface-warm: #faf8f6;
+  --footer-bg: #ebcbd8;
+  --footer-accent: #b46f8a;
 
   @media (width >= 48rem) {
     --checker-square: 50px;
@@ -29,26 +36,31 @@ body {
 
 @layer components {
   /*
-   * The hero content fills at least the first viewport; the fade into the
-   * checkerboard sits below it, so the checkerboard only appears on scroll.
+   * The hero content plus the services marquee fill exactly the first viewport, so the
+   * marquee closes the hero at the bottom of the screen and the checkerboard only
+   * appears on scroll.
    */
   .hero {
-    --hero-fade: 9rem;
-    padding-bottom: var(--hero-fade);
+    /* Title size; the composition and the central photo are scaled from it. */
+    --t: clamp(2.9375rem, 11.75vw, 9.625rem);
+    --marquee-h: 3rem;
+
+    @media (width >= 48rem) {
+      --marquee-h: 3.5rem;
+    }
   }
 
-  /* Hero background: soft organic shapes that fade into the checkerboard at the bottom. */
+  .hero-content {
+    min-height: calc(100svh - var(--marquee-h));
+  }
+
+  /* Hero background: soft organic shapes. */
   .hero-bg {
     position: absolute;
     inset: 0;
     z-index: -1;
     overflow: hidden;
     background: var(--hero-cream);
-    mask-image: linear-gradient(
-      to bottom,
-      #000 calc(100% - var(--hero-fade)),
-      transparent
-    );
   }
 
   .hero-shape {
@@ -98,7 +110,6 @@ body {
    * the title size (--t), so the whole composition scales as one piece.
    */
   .hero-composition {
-    --t: clamp(3.125rem, 12.5vw, 10.25rem);
     position: relative;
     /* Keeps all hero text above the central photo. */
     z-index: 1;
@@ -114,13 +125,13 @@ body {
   /*
    * Central photo, behind the text. Its light backdrop is blended and feathered out so it
    * melts into the hero background. It lives inside the hero content area, which ends
-   * above the checkerboard fade, so it can't reach that section.
+   * above the marquee, so it can't reach the marquee or the content below.
    */
   .hero-visual {
     position: absolute;
-    top: 52%;
+    top: 56%;
     left: 50%;
-    height: 55%;
+    height: 48%;
     width: auto;
     max-width: 100%;
     object-fit: cover;
@@ -149,36 +160,20 @@ body {
   }
 
   @media (width >= 48rem) {
-    /* Size of the vertical surname: the title size, reduced on short screens so it fits. */
-    .hero-composition {
-      --vt: min(var(--t), 15svh);
-    }
-
-    /* Sits to the left of the vertical surname. */
     .hero-role {
       position: absolute;
       top: calc(var(--t) * 1.7);
-      right: calc(var(--vt) * 1.3);
+      right: 0;
       max-width: calc(var(--t) * 2.4);
       text-align: right;
     }
 
-    /* Keeps the same height as the former two-line title, so the layout doesn't shift. */
     .hero-title {
-      min-height: calc(var(--t) * 3);
       margin-top: 0;
     }
 
-    /* Surname set vertically on the right, reading top to bottom. */
     .hero-title__second {
-      position: absolute;
-      top: 50%;
-      right: 0;
-      font-size: var(--vt);
-      line-height: 1;
-      white-space: nowrap;
-      writing-mode: vertical-rl;
-      translate: 0 -50%;
+      margin-top: calc(var(--t) * 1.2);
     }
 
     .hero-image {
@@ -186,15 +181,15 @@ body {
     }
 
     /*
-     * Desktop: the photo fills the content area between the navbar and the fade, capped
-     * relative to the viewport width on narrower screens and centred vertically.
+     * Desktop: the photo sits between the two lines of the name, so the dark camera body
+     * stays clear of the title. Sized from the title scale, capped by the content height.
      */
     .hero-visual {
       top: 6rem;
       bottom: 1rem;
-      height: min(calc(100% - 7rem), 70vw);
+      height: min(calc(100% - 7rem), calc(var(--t) * 3.2));
       margin-block: auto;
-      translate: -50% 0;
+      translate: -50% -9%;
     }
 
     .hero-headline {
@@ -203,6 +198,1453 @@ body {
       left: 0;
       max-width: calc(var(--t) * 2.2);
       margin-top: 0;
+    }
+  }
+
+  /* Services marquee: the bottom edge of the hero. */
+  .hero-marquee {
+    display: flex;
+    align-items: center;
+    height: var(--marquee-h);
+    overflow: hidden;
+    border-block: 1.4px solid var(--ink);
+    background: var(--marquee-bg);
+  }
+
+  /*
+   * Shared marquee (Marquee.tsx). The track holds two identical groups and slides by
+   * exactly one group (-50%), so the loop is seamless. Spacing lives inside each item
+   * (never between groups) to keep both halves the same width.
+   */
+  .marquee__track {
+    display: flex;
+    flex-shrink: 0;
+    width: max-content;
+    animation: marquee var(--marquee-duration, 70s) linear infinite;
+
+    @media (prefers-reduced-motion: reduce) {
+      animation: none;
+    }
+  }
+
+  .marquee__track--reverse {
+    animation-direction: reverse;
+  }
+
+  .marquee__group {
+    display: flex;
+    flex-shrink: 0;
+  }
+
+  .marquee__item {
+    --marquee-gap: 1.75rem;
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: var(--marquee-gap);
+    padding-right: var(--marquee-gap);
+    white-space: nowrap;
+  }
+
+  @keyframes marquee {
+    to {
+      transform: translateX(-50%);
+    }
+  }
+
+  /*
+   * Content panel: one continuous white canvas below the hero, centred over the
+   * checkerboard. Every portfolio section lives inside it, so it never breaks between
+   * sections. Its side rules continue the marquee's ink lines.
+   */
+  .content-panel {
+    width: min(70rem, 100% - 1.5rem);
+    /* The checkerboard margin that closes this stage, before the warm surface. */
+    margin: 0 auto 5rem;
+    border-inline: 1.4px solid var(--ink);
+    border-bottom: 1.4px solid var(--ink);
+    background: var(--checker-white);
+
+    @media (width >= 48rem) {
+      width: min(70rem, 100% - 5rem);
+      margin-bottom: 7rem;
+    }
+  }
+
+  /* About: portrait with the platform orbit, beside the introduction. */
+  .about {
+    display: grid;
+    gap: 2.5rem;
+    padding: 3.5rem 1.25rem;
+
+    @media (width >= 48rem) {
+      gap: 3rem;
+      padding: 5rem 3.5rem;
+    }
+
+    /* Two columns only where each column is wide enough for a generous portrait. */
+    @media (width >= 64rem) {
+      grid-template-columns: 1fr 1fr;
+      align-items: center;
+      padding: 6rem 3.5rem;
+    }
+  }
+
+  .about-visual {
+    display: grid;
+    place-items: center;
+    container-type: inline-size;
+  }
+
+  /*
+   * Orbit sizes derive from the portrait width, which is capped so the whole orbit
+   * (plus its icons) always fits inside the column.
+   */
+  .about-orbit {
+    --portrait-w: min(19rem, (100cqi - 3rem) / 1.45);
+    --orbit: calc(var(--portrait-w) * 1.45);
+    --icon: clamp(2.25rem, 12cqi, 2.75rem);
+    display: grid;
+    place-items: center;
+    width: calc(var(--orbit) + var(--icon));
+    aspect-ratio: 1;
+
+    & > * {
+      grid-area: 1 / 1;
+    }
+  }
+
+  .about-orbit__line {
+    width: var(--orbit);
+    aspect-ratio: 1;
+    border: 1px solid color-mix(in srgb, var(--ink) 28%, transparent);
+    border-radius: 50%;
+  }
+
+  .about-portrait {
+    position: relative;
+    z-index: 1;
+    width: var(--portrait-w);
+    aspect-ratio: 4 / 5;
+    border: 1.4px solid var(--ink);
+    border-radius: 0.75rem;
+    object-fit: cover;
+    object-position: 46% 30%;
+  }
+
+  .about-orbit__icons {
+    position: relative;
+    z-index: 2;
+    width: var(--orbit);
+    aspect-ratio: 1;
+    animation: about-orbit 48s linear infinite;
+  }
+
+  .about-orbit__slot {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: var(--icon);
+    height: var(--icon);
+    margin: calc(var(--icon) / -2);
+    transform: rotate(var(--angle)) translateX(calc(var(--orbit) / 2))
+      rotate(calc(-1 * var(--angle)));
+  }
+
+  .about-orbit__icon {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    height: 100%;
+    border: 1.4px solid var(--ink);
+    border-radius: 50%;
+    background: var(--checker-white);
+    animation: about-orbit 48s linear infinite reverse;
+  }
+
+  .about-orbit__icons,
+  .about-orbit__icon {
+    @media (prefers-reduced-motion: reduce) {
+      animation: none;
+    }
+  }
+
+  @keyframes about-orbit {
+    to {
+      transform: rotate(1turn);
+    }
+  }
+
+  /* Thin rule between sections, inside the same white panel. */
+  .section-divider {
+    margin-inline: 1.25rem;
+    border: 0;
+    border-top: 1px solid color-mix(in srgb, var(--ink) 18%, transparent);
+
+    @media (width >= 48rem) {
+      margin-inline: 3.5rem;
+    }
+  }
+
+  /* Portfolio: intro plus five project folders. */
+  .portfolio {
+    padding: 3.5rem 1.25rem 4.5rem;
+    /* Opened sheets fan out slightly; never let them cause horizontal scroll. */
+    overflow-x: clip;
+
+    @media (width >= 48rem) {
+      padding: 5rem 3.5rem 6rem;
+    }
+  }
+
+  /* Folders wrap and centre, so five items sit as 3 + 2 (desktop) or 2 + 2 + 1 (tablet). */
+  .portfolio-grid {
+    --gap-x: 2.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 2rem var(--gap-x);
+    margin-top: 2rem;
+    container-type: inline-size;
+  }
+
+  .portfolio-item {
+    --item-w: min(19rem, 100cqi);
+    width: var(--item-w);
+    /* Room above each folder for the sheets that rise out of it. */
+    padding-top: calc(var(--item-w) * 0.22);
+
+    @media (width >= 40rem) {
+      --item-w: min(19rem, (100cqi - var(--gap-x)) / 2);
+    }
+
+    @media (width >= 64rem) {
+      --item-w: min(19rem, (100cqi - 2 * var(--gap-x)) / 3);
+    }
+  }
+
+  /*
+   * Folder. --open (0 = closed, 1 = open) drives every moving part, so hover, focus and
+   * the touch toggle all share the same motion.
+   */
+  .folder {
+    --open: 0;
+    --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+    position: relative;
+    isolation: isolate;
+    display: block;
+    width: 100%;
+    aspect-ratio: 5 / 4;
+    border-radius: 0.75rem;
+    cursor: pointer;
+    transform: translateY(calc(var(--open) * -6px));
+    transition: transform 0.45s var(--ease);
+
+    &:focus-visible {
+      outline: 2px solid var(--ink);
+      outline-offset: 6px;
+    }
+
+    &:is(:focus-visible, [aria-pressed='true']) {
+      --open: 1;
+    }
+
+    @media (hover: hover) {
+      &:hover {
+        --open: 1;
+      }
+    }
+  }
+
+  .folder__tab {
+    position: absolute;
+    top: 4%;
+    left: 0;
+    z-index: 1;
+    width: 40%;
+    /* Overlaps the back's top border so tab and back read as one piece. */
+    height: calc(9% + 1.4px);
+    border: 1.4px solid var(--ink);
+    border-bottom: 0;
+    border-radius: 0.7rem 0.7rem 0 0;
+    background: var(--folder-back);
+  }
+
+  .folder__back {
+    position: absolute;
+    inset: 13% 0 0;
+    border: 1.4px solid var(--ink);
+    border-radius: 0 0.75rem 0.75rem;
+    background: var(--folder-back);
+  }
+
+  .folder__sheet {
+    position: absolute;
+    inset: 18% 19% 12%;
+    z-index: 2;
+    padding: 4%;
+    border: 1px solid color-mix(in srgb, var(--ink) 28%, transparent);
+    border-radius: 0.35rem;
+    background: var(--paper);
+    box-shadow: 0 8px 16px -12px rgb(33 33 33 / 0.4);
+    transition: transform 0.55s var(--ease);
+
+    & img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      border-radius: 0.2rem;
+      object-fit: cover;
+    }
+  }
+
+  /* Closed: tucked in, slightly askew. Open: they rise and fan apart. */
+  .folder__sheet--1 {
+    transform: translate(
+        calc(-14% - 16% * var(--open)),
+        calc(6% - 58% * var(--open))
+      )
+      rotate(calc(-4deg - 6deg * var(--open)));
+  }
+
+  .folder__sheet--2 {
+    transform: translate(
+        calc(14% + 16% * var(--open)),
+        calc(2% - 50% * var(--open))
+      )
+      rotate(calc(3deg + 5deg * var(--open)));
+  }
+
+  .folder__front {
+    position: absolute;
+    inset: 36% 0 0;
+    z-index: 3;
+    display: grid;
+    place-items: center;
+    border: 1.4px solid var(--ink);
+    border-radius: 0.75rem;
+    background: var(--folder-front);
+    box-shadow: 0 16px 24px -20px rgb(33 33 33 / 0.5);
+    transform-origin: 50% 100%;
+    /* The front flap tips forward as the folder opens. */
+    transform: perspective(40rem) rotateX(calc(var(--open) * -14deg));
+    transition: transform 0.5s var(--ease);
+
+    /* Fine inner edge, like a folder's folded lip. */
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 0.6rem 0.75rem auto;
+      height: 1px;
+      background: color-mix(in srgb, var(--ink) 18%, transparent);
+    }
+  }
+
+  .folder__label {
+    max-width: 86%;
+    padding: 0.45rem 1rem;
+    border: 1.4px solid var(--ink);
+    border-radius: 999px;
+    background: var(--checker-white);
+    font-family: var(--font-serif);
+    font-size: 1.05rem;
+    line-height: 1.15;
+    text-align: center;
+    rotate: -3deg;
+  }
+
+  .folder,
+  .folder__sheet,
+  .folder__front {
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+    }
+  }
+
+  /* Lo que hago: intro plus four professional areas, set as an editorial 2 × 2 grid. */
+  .what-i-do {
+    padding: 3.5rem 1.25rem 4.5rem;
+
+    @media (width >= 48rem) {
+      padding: 5rem 3.5rem 6rem;
+    }
+  }
+
+  .what-i-do__intro {
+    display: grid;
+    gap: 1.5rem;
+
+    @media (width >= 64rem) {
+      grid-template-columns: 7fr 5fr;
+      align-items: end;
+      gap: 4rem;
+    }
+  }
+
+  .what-i-do__areas {
+    display: grid;
+    gap: 3rem;
+    margin-top: 3.5rem;
+
+    @media (width >= 48rem) {
+      grid-template-columns: 1fr 1fr;
+      gap: 4rem 3.5rem;
+      margin-top: 4.5rem;
+    }
+  }
+
+  /* Each area opens with a fine rule, like the section dividers. */
+  .what-i-do__area {
+    padding-top: 1.75rem;
+    border-top: 1px solid color-mix(in srgb, var(--ink) 18%, transparent);
+  }
+
+  .what-i-do__number {
+    display: inline-grid;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border: 1.4px solid var(--ink);
+    border-radius: 50%;
+    background: var(--marquee-bg);
+    font-family: var(--font-serif);
+    font-size: 0.875rem;
+    font-style: italic;
+  }
+
+  /*
+   * Lo que aporto: an asymmetric editorial composition. Vertical label in the margin,
+   * a dominant headline, the outlined word CREATIVIDAD, and four strengths set at
+   * different sizes and offsets.
+   */
+  .contribution {
+    display: grid;
+    gap: 2rem;
+    padding: 3.5rem 1.25rem 4.5rem;
+
+    @media (width >= 48rem) {
+      grid-template-columns: auto minmax(0, 1fr);
+      column-gap: 3rem;
+      padding: 5rem 3.5rem 6rem;
+    }
+  }
+
+  /* Horizontal on mobile; a vertical spine in the margin from tablet up. */
+  .contribution__label {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+
+    @media (width >= 48rem) {
+      flex-direction: column;
+      align-self: start;
+
+      & p {
+        writing-mode: vertical-rl;
+        rotate: 180deg;
+      }
+    }
+  }
+
+  .contribution__label-line {
+    width: 3rem;
+    height: 1px;
+    background: var(--ink);
+
+    @media (width >= 48rem) {
+      width: 1px;
+      height: 6rem;
+    }
+  }
+
+  .contribution__body {
+    display: grid;
+    gap: 2.5rem;
+    container-type: inline-size;
+
+    @media (width >= 64rem) {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      gap: 3rem 2rem;
+    }
+  }
+
+  .contribution__headline {
+    font-size: clamp(2rem, 7.5cqi, 3.5rem);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+
+    @media (width >= 64rem) {
+      grid-column: 1 / 10;
+    }
+  }
+
+  .contribution__headline-indent {
+    padding-left: 1.2em;
+  }
+
+  .contribution__headline-accent {
+    font-size: clamp(3.5rem, 21cqi, 9rem);
+    line-height: 0.95;
+
+    /* The headline shares its row with the rings on desktop, so scale it down there. */
+    @media (width >= 64rem) {
+      font-size: clamp(3.5rem, 15.5cqi, 9rem);
+    }
+  }
+
+  .contribution__rings {
+    display: none;
+    color: var(--ink);
+
+    @media (width >= 64rem) {
+      display: block;
+      grid-column: 10 / 13;
+      align-self: center;
+      justify-self: end;
+      width: min(100%, 12rem);
+    }
+  }
+
+  .contribution__word {
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+    color: var(--ink);
+
+    @media (width >= 64rem) {
+      grid-column: 1 / -1;
+    }
+  }
+
+  .contribution__strengths {
+    display: grid;
+    gap: 2.5rem;
+
+    @media (width >= 64rem) {
+      grid-column: 1 / -1;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      gap: 3.5rem 2rem;
+    }
+  }
+
+  .contribution__strength {
+    max-width: 30rem;
+  }
+
+  .contribution__number {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-family: var(--font-serif);
+    font-size: 0.95rem;
+    font-style: italic;
+
+    &::after {
+      content: '';
+      width: 2rem;
+      height: 1px;
+      background: var(--ink);
+    }
+  }
+
+  .contribution__title {
+    margin-top: 0.75rem;
+    font-size: 1.375rem;
+    line-height: 1.2;
+  }
+
+  /* 01 leads: larger title, directly under the featured word. */
+  .contribution__strength--1 .contribution__title {
+    font-size: clamp(1.75rem, 4cqi, 2.25rem);
+  }
+
+  /* 02 and 04 hang from a fine vertical rule. */
+  .contribution__strength--2,
+  .contribution__strength--4 {
+    padding-left: 1.25rem;
+    border-left: 1px solid color-mix(in srgb, var(--ink) 22%, transparent);
+  }
+
+  /* Tablet: one column, with staggered indents for rhythm. */
+  @media (width >= 48rem) and (width < 64rem) {
+    .contribution__strength--2 {
+      margin-left: 30%;
+    }
+
+    .contribution__strength--3 {
+      margin-left: 10%;
+    }
+
+    .contribution__strength--4 {
+      margin-left: 40%;
+    }
+  }
+
+  /* Desktop: 01 and 02 side by side, 03 and 04 offset below at different heights. */
+  @media (width >= 64rem) {
+    .contribution__strength--1 {
+      grid-column: 1 / 7;
+    }
+
+    .contribution__strength--2 {
+      grid-column: 8 / 13;
+      margin-top: 4.5rem;
+    }
+
+    .contribution__strength--3 {
+      grid-column: 2 / 7;
+    }
+
+    .contribution__strength--4 {
+      grid-column: 8 / 13;
+      margin-top: 3rem;
+    }
+  }
+
+  /*
+   * Mi forma de trabajar: an editorial timeline. A fine spine with a node per stage,
+   * large numbers and stages that alternate sides on desktop. On mobile the spine moves
+   * to the left margin. --progress (0–1, set on scroll in HowIWork.tsx) draws the spine.
+   */
+  .process {
+    --rail: 2.5rem;
+    padding: 3.5rem 1.25rem 4.5rem;
+
+    @media (width >= 48rem) {
+      padding: 5rem 3.5rem 6rem;
+    }
+  }
+
+  .process__header {
+    max-width: 38rem;
+  }
+
+  .process__timeline {
+    position: relative;
+    margin-top: 3.5rem;
+
+    @media (width >= 64rem) {
+      --rail: 7rem;
+      margin-top: 4.5rem;
+    }
+  }
+
+  /* Spine: a faint track with an ink line drawn over it as you scroll. */
+  .process__spine {
+    position: absolute;
+    top: 0;
+    /* Ends at the centre of the closing disc. */
+    bottom: 1.375rem;
+    left: calc(var(--rail) / 2);
+    width: 1px;
+    background: color-mix(in srgb, var(--ink) 15%, transparent);
+
+    @media (width >= 64rem) {
+      left: 50%;
+    }
+  }
+
+  .process__spine-progress {
+    position: absolute;
+    inset: 0;
+    background: var(--ink);
+    transform-origin: top;
+  }
+
+  .process[data-animate] .process__spine-progress {
+    transform: scaleY(var(--progress, 0));
+  }
+
+  .process__stages {
+    display: grid;
+    gap: 3rem;
+
+    @media (width >= 64rem) {
+      gap: 1.5rem;
+    }
+  }
+
+  /* Mobile/tablet: rail column for the node, content beside it. */
+  .process__stage {
+    position: relative;
+    display: grid;
+    grid-template-columns: var(--rail) minmax(0, 1fr);
+    column-gap: 1rem;
+  }
+
+  .process__node {
+    z-index: 1;
+    grid-column: 1;
+    grid-row: 1;
+    justify-self: center;
+    width: 0.9rem;
+    height: 0.9rem;
+    margin-top: 1.1rem;
+    border: 1.4px solid var(--ink);
+    border-radius: 50%;
+    background: var(--folder-back);
+  }
+
+  /* Large numbers: blush or cream fill with a fine ink outline. */
+  .process__number {
+    grid-column: 2;
+    grid-row: 1;
+    font-size: clamp(4.5rem, 22vw, 7rem);
+    line-height: 0.85;
+    letter-spacing: -0.04em;
+    color: var(--folder-back);
+    -webkit-text-stroke: 1.4px var(--ink);
+  }
+
+  /* 02 and 04 switch to cream, so the sequence alternates blush and cream. */
+  .process__stage--2,
+  .process__stage--4 {
+    .process__node {
+      background: var(--hero-cream);
+    }
+
+    .process__number {
+      color: var(--hero-cream);
+      /* Mobile: alternate the numbers to the right for rhythm. */
+      justify-self: end;
+    }
+  }
+
+  .process__body {
+    grid-column: 2;
+    max-width: 28rem;
+    margin-top: 0.75rem;
+  }
+
+  .process__phase {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.75rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+
+    &::before {
+      content: '';
+      width: 1.75rem;
+      height: 1px;
+      background: var(--ink);
+    }
+  }
+
+  .process__title {
+    margin-top: 0.6rem;
+    font-size: clamp(1.625rem, 2.4vw, 2rem);
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+  }
+
+  /* Stage 03 gives its headline the leading role. */
+  .process__stage--3 .process__title {
+    font-size: clamp(2rem, 4vw, 3rem);
+    font-style: italic;
+    line-height: 1.05;
+  }
+
+  .process__text {
+    margin-top: 0.6rem;
+    line-height: 1.65;
+    color: color-mix(in srgb, var(--ink) 80%, transparent);
+  }
+
+  /* Desktop: centred spine, stages alternate sides (number / spine / text). */
+  @media (width >= 64rem) {
+    .process__stage {
+      grid-template-columns: minmax(0, 1fr) var(--rail) minmax(0, 1fr);
+      align-items: center;
+      column-gap: 0;
+    }
+
+    .process__node {
+      grid-column: 2;
+      align-self: center;
+      margin-top: 0;
+    }
+
+    .process__number {
+      font-size: clamp(7rem, 11vw, 10rem);
+    }
+
+    .process__body {
+      grid-row: 1;
+      margin-top: 0;
+    }
+
+    /* 01 and 03: number left, text right. */
+    .process__stage--1,
+    .process__stage--3 {
+      .process__number {
+        grid-column: 1;
+        justify-self: end;
+      }
+
+      .process__body {
+        grid-column: 3;
+      }
+    }
+
+    /* 02 and 04: text left, number right. */
+    .process__stage--2,
+    .process__stage--4 {
+      .process__number {
+        grid-column: 3;
+        justify-self: start;
+      }
+
+      .process__body {
+        grid-column: 1;
+        justify-self: end;
+      }
+    }
+  }
+
+  /* Closing disc where the spine ends. */
+  .process__end {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 3rem;
+    /* Centres the disc on the spine (may be negative, hence a margin). */
+    margin-left: calc(var(--rail) / 2 - 1.375rem);
+
+    @media (width >= 64rem) {
+      justify-content: center;
+      margin-left: 0;
+    }
+  }
+
+  .process__end-disc {
+    display: grid;
+    flex-shrink: 0;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border: 1.4px solid var(--ink);
+    border-radius: 50%;
+    background: var(--marquee-bg);
+  }
+
+  .process__end-label {
+    font-family: var(--font-serif);
+    font-size: 1.25rem;
+    font-style: italic;
+
+    /* Desktop: the label sits beside the disc without shifting it off the spine. */
+    @media (width >= 64rem) {
+      position: absolute;
+      left: calc(50% + 2.25rem);
+    }
+  }
+
+  /* Reveal: stages rise in gently the first time they're seen. */
+  .process[data-animate] .process__stage {
+    .process__number,
+    .process__body {
+      transition:
+        opacity 0.7s ease,
+        translate 0.7s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+
+    .process__body {
+      transition-delay: 0.12s;
+    }
+
+    &:not([data-visible]) {
+      .process__number,
+      .process__body {
+        opacity: 0;
+        translate: 0 1.25rem;
+      }
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .process__number,
+    .process__body {
+      transition: none;
+    }
+  }
+
+  /*
+   * Closing stage: a full-width warm surface after the checkerboard margin. It holds the
+   * transition band, FAQ and contact, outside the white panel.
+   */
+  .closing {
+    border-top: 1.4px solid var(--ink);
+    background: var(--surface-warm);
+  }
+
+  /* Transition band: a statement plus a slow word marquee, running opposite to the hero's. */
+  .closing-band {
+    padding-top: 5.5rem;
+
+    @media (width >= 48rem) {
+      padding-top: 7rem;
+    }
+  }
+
+  .closing-band__statement {
+    max-width: 60rem;
+    margin-inline: auto;
+    padding-inline: 1.25rem;
+    text-align: center;
+  }
+
+  .closing-band__marquee {
+    margin-top: 3.5rem;
+    padding-block: 1.1rem;
+    overflow: hidden;
+    border-block: 1px solid color-mix(in srgb, var(--ink) 18%, transparent);
+    font-family: var(--font-serif);
+    font-size: clamp(1.75rem, 4.5vw, 3.25rem);
+    line-height: 1.1;
+    text-transform: uppercase;
+
+    @media (width >= 48rem) {
+      margin-top: 4.5rem;
+      padding-block: 1.5rem;
+    }
+
+    & .marquee__item {
+      --marquee-gap: clamp(1.25rem, 3vw, 2.5rem);
+    }
+  }
+
+  .closing-band__dot {
+    flex-shrink: 0;
+    width: 0.55rem;
+    height: 0.55rem;
+    border-radius: 50%;
+    background: var(--folder-back);
+  }
+
+  /* FAQ: an editorial archive. Intro column beside index-card entries with tabs. */
+  .faq {
+    display: grid;
+    gap: 3rem;
+    max-width: 70rem;
+    margin-inline: auto;
+    padding: 6rem 1.25rem 5rem;
+
+    @media (width >= 48rem) {
+      padding: 8rem 3.5rem 6rem;
+    }
+
+    @media (width >= 64rem) {
+      grid-template-columns: 5fr 7fr;
+      align-items: start;
+      gap: 5rem;
+    }
+  }
+
+  .faq__intro {
+    @media (width >= 64rem) {
+      position: sticky;
+      top: 7rem;
+    }
+  }
+
+  .faq__count {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-top: 2rem;
+    font-size: 0.75rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: color-mix(in srgb, var(--ink) 70%, transparent);
+  }
+
+  .faq__list {
+    display: grid;
+    gap: 2.25rem;
+    padding-top: 1.5rem;
+  }
+
+  .faq__item {
+    position: relative;
+    border-top: 1px solid var(--ink);
+  }
+
+  .faq__question {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 1.5rem;
+    width: 100%;
+    padding: 1.5rem 0 1.25rem;
+    text-align: left;
+    cursor: pointer;
+
+    &:focus-visible {
+      outline: 2px solid var(--ink);
+      outline-offset: 4px;
+      border-radius: 0.25rem;
+    }
+  }
+
+  /* Index-card tab sitting on the entry's top rule; blush when open. */
+  .faq__tab {
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    padding: 0.3rem 0.8rem 0.2rem;
+    border: 1px solid var(--ink);
+    border-bottom: 0;
+    border-radius: 0.5rem 0.5rem 0 0;
+    background: var(--hero-cream);
+    font-size: 0.7rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    transition: background-color 0.3s ease;
+  }
+
+  .faq__text {
+    font-size: clamp(1.25rem, 2.2vw, 1.6rem);
+    line-height: 1.25;
+  }
+
+  /* Plus that turns into a minus: the open state reads by shape, not only colour. */
+  .faq__icon {
+    position: relative;
+    flex-shrink: 0;
+    width: 2.25rem;
+    height: 2.25rem;
+    border: 1.4px solid var(--ink);
+    border-radius: 50%;
+    transition: background-color 0.3s ease;
+
+    &::before,
+    &::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0.85rem;
+      height: 1.4px;
+      background: var(--ink);
+      translate: -50% -50%;
+      transition: rotate 0.35s ease;
+    }
+
+    &::after {
+      rotate: 90deg;
+    }
+  }
+
+  .faq__item[data-open] {
+    .faq__tab,
+    .faq__icon {
+      background-color: var(--marquee-bg);
+    }
+
+    .faq__icon::after {
+      rotate: 0deg;
+    }
+  }
+
+  /* Smooth height reveal without measuring: grid rows animate from 0fr to 1fr. */
+  .faq__answer {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.4s ease;
+  }
+
+  .faq__item[data-open] .faq__answer {
+    grid-template-rows: 1fr;
+  }
+
+  .faq__answer-inner {
+    overflow: hidden;
+
+    & p {
+      max-width: 38rem;
+      padding: 0 3.5rem 1.75rem 0;
+      line-height: 1.7;
+      color: color-mix(in srgb, var(--ink) 80%, transparent);
+    }
+  }
+
+  /* Contact: large asymmetric headline, channels list, and the CTA set in a blush arch. */
+  .contact {
+    display: grid;
+    /* minmax(0, 1fr): long words can't widen the column past the screen. */
+    grid-template-columns: minmax(0, 1fr);
+    gap: 3rem;
+    max-width: 70rem;
+    margin-inline: auto;
+    padding: 5rem 1.25rem 7rem;
+
+    @media (width >= 48rem) {
+      padding: 6rem 3.5rem 9rem;
+    }
+
+    @media (width >= 64rem) {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      gap: 4rem 2rem;
+    }
+  }
+
+  .contact__head {
+    @media (width >= 64rem) {
+      grid-column: 1 / -1;
+    }
+  }
+
+  .contact__title {
+    font-size: clamp(2.5rem, 6.5vw, 5.25rem);
+    line-height: 1;
+    letter-spacing: -0.025em;
+
+    & > span:nth-child(2) {
+      padding-left: 1.2em;
+    }
+  }
+
+  .contact__title-accent {
+    /* Scales down on very narrow phones so "conversación." never overflows. */
+    font-size: clamp(2.5rem, 13vw, 8rem);
+    line-height: 1;
+
+    @media (width >= 64rem) {
+      text-align: right;
+    }
+  }
+
+  .contact__details {
+    @media (width >= 64rem) {
+      grid-column: 1 / 6;
+      align-self: end;
+    }
+  }
+
+  .contact__channels {
+    margin-top: 2.5rem;
+    border-top: 1px solid color-mix(in srgb, var(--ink) 22%, transparent);
+  }
+
+  .contact__channel {
+    display: grid;
+    grid-template-columns: 6.5rem minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 1rem;
+    min-height: 3.5rem;
+    padding-block: 0.9rem;
+    border-bottom: 1px solid color-mix(in srgb, var(--ink) 22%, transparent);
+
+    &:is(a):focus-visible {
+      outline: 2px solid var(--ink);
+      outline-offset: 4px;
+    }
+
+    &:is(a):hover .contact__arrow {
+      translate: 0.4rem 0;
+    }
+
+    &[data-pending] .contact__channel-value {
+      font-style: italic;
+      color: color-mix(in srgb, var(--ink) 50%, transparent);
+    }
+  }
+
+  .contact__channel-label {
+    font-size: 0.75rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+
+  .contact__channel-value {
+    overflow-wrap: anywhere;
+    font-family: var(--font-serif);
+    font-size: 1.15rem;
+  }
+
+  .contact__arrow {
+    width: 2.75rem;
+    height: auto;
+    transition: translate 0.35s ease;
+  }
+
+  .contact__cta-wrap {
+    @media (width >= 64rem) {
+      grid-column: 7 / 13;
+      align-self: end;
+    }
+  }
+
+  .contact__cta {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1.25rem;
+    width: min(100%, 24rem);
+    min-height: 20rem;
+    margin-inline: auto;
+    padding: 3rem 1.5rem;
+    border: 1.4px solid var(--ink);
+    border-radius: 999px 999px 1.5rem 1.5rem;
+    background: var(--marquee-bg);
+    text-align: center;
+    transition: background-color 0.35s ease;
+
+    @media (width >= 64rem) {
+      min-height: 26rem;
+      margin-right: 0;
+    }
+
+    &:hover {
+      background: var(--folder-front);
+
+      .contact__arrow {
+        translate: 0.5rem 0;
+      }
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--ink);
+      outline-offset: 6px;
+    }
+  }
+
+  .contact__cta-main {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-size: clamp(2.5rem, 5vw, 3.25rem);
+    font-style: italic;
+    line-height: 1;
+
+    & .contact__arrow {
+      width: 2.75rem;
+    }
+  }
+
+  .contact__cta-topics {
+    font-size: 0.75rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .faq__tab,
+    .faq__icon,
+    .faq__icon::before,
+    .faq__icon::after,
+    .faq__answer,
+    .contact__arrow,
+    .contact__cta {
+      transition: none;
+    }
+  }
+
+  /*
+   * Footer: the last page of the magazine. A full-width blush surface with the name set
+   * across its width, a fine rule, then tagline, links and the legal line.
+   */
+  .site-footer {
+    border-top: 1.4px solid var(--ink);
+    background: var(--footer-bg);
+  }
+
+  .site-footer__inner {
+    max-width: 80rem;
+    margin-inline: auto;
+    padding: 4rem 1.25rem 2rem;
+    container-type: inline-size;
+
+    @media (width >= 48rem) {
+      padding: 5.5rem 3.5rem 2.5rem;
+    }
+  }
+
+  .site-footer__top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+  }
+
+  .site-footer__top-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-height: 2.75rem;
+    font-size: 0.75rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+
+  .site-footer__top-icon {
+    display: grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border: 1.4px solid var(--ink);
+    border-radius: 50%;
+    color: var(--footer-accent);
+  }
+
+  /* The name spans the footer: two lines on mobile, one full-width line from tablet up. */
+  .site-footer__name {
+    margin-top: 3rem;
+    font-size: 19cqi;
+    line-height: 0.92;
+    letter-spacing: -0.035em;
+
+    & span {
+      display: block;
+    }
+
+    & .site-footer__name-last {
+      padding-left: 0.6em;
+    }
+
+    @media (width >= 48rem) {
+      margin-top: 3.5rem;
+      font-size: 11.8cqi;
+      white-space: nowrap;
+
+      & span {
+        display: inline;
+      }
+
+      & .site-footer__name-last {
+        padding-left: 0;
+      }
+    }
+  }
+
+  .site-footer__bottom {
+    display: grid;
+    gap: 2.25rem;
+    margin-top: 2.5rem;
+    padding-top: 2rem;
+    border-top: 1px solid color-mix(in srgb, var(--ink) 30%, transparent);
+
+    @media (width >= 48rem) {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      gap: 2rem;
+      margin-top: 3rem;
+    }
+  }
+
+  .site-footer__tagline {
+    font-size: 1.25rem;
+    line-height: 1.35;
+
+    @media (width >= 48rem) {
+      grid-column: 1 / 6;
+      max-width: 18rem;
+    }
+  }
+
+  .site-footer__links {
+    @media (width >= 48rem) {
+      grid-column: 7 / 10;
+    }
+  }
+
+  .site-footer__label {
+    font-size: 0.75rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: color-mix(in srgb, var(--ink) 75%, transparent);
+  }
+
+  /*
+   * One hover idea: an underline drawn from left to right. Touch screens (no hover) keep
+   * a fine underline visible so the links read as links.
+   */
+  .site-footer__link,
+  .site-footer__top-link {
+    background-image: linear-gradient(currentColor, currentColor);
+    background-position: 0 100%;
+    background-repeat: no-repeat;
+    background-size: 0% 1px;
+    transition: background-size 0.35s ease;
+
+    &:hover,
+    &:focus-visible {
+      background-size: 100% 1px;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--ink);
+      outline-offset: 4px;
+    }
+
+    @media (hover: none) {
+      background-size: 100% 1px;
+    }
+  }
+
+  /* The back-to-top label sits beside its icon, so underline only under the text area. */
+  .site-footer__top-link {
+    background-position: 3.5rem 85%;
+    background-size: 0% 1px;
+
+    &:hover,
+    &:focus-visible {
+      background-size: calc(100% - 3.5rem) 1px;
+    }
+
+    @media (hover: none) {
+      background-size: calc(100% - 3.5rem) 1px;
+    }
+  }
+
+  .site-footer__link {
+    font-family: var(--font-serif);
+    font-size: 1.25rem;
+  }
+
+  .site-footer__link-pending {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.75rem;
+    font-family: var(--font-serif);
+    font-size: 1.25rem;
+  }
+
+  .site-footer__pending {
+    font-family: var(--font-sans);
+    font-size: 0.7rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    /* Dark enough for small text on the blush background (WCAG AA). */
+    color: color-mix(in srgb, var(--ink) 78%, transparent);
+  }
+
+  .site-footer__legal {
+    font-size: 0.8125rem;
+    color: color-mix(in srgb, var(--ink) 80%, transparent);
+
+    @media (width >= 48rem) {
+      grid-column: 10 / 13;
+      justify-self: end;
+      text-align: right;
+    }
+  }
+
+  .site-footer__heart {
+    color: var(--footer-accent);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .site-footer__link,
+    .site-footer__top-link {
+      transition: none;
     }
   }
 

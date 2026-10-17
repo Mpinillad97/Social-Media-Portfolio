@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500">
+  <!-- Provisional project preview. Replace with Luciana's real content. -->
+  <defs>
+    <pattern id="dots" width="22" height="22" patternUnits="userSpaceOnUse">
+      <circle cx="11" cy="11" r="2.4" fill="#e3c9b6" />
+    </pattern>
+  </defs>
+  <rect width="500" height="500" fill="#f7efe6" />
+  <rect width="500" height="500" fill="url(#dots)" />
+  <rect x="95" y="60" width="310" height="130" rx="65" fill="#fffaf4" stroke="#212121" stroke-width="3" />
+  <path d="M155 100c2 13 12 23 25 25-13 2-23 12-25 25-2-13-12-23-25-25 13-2 23-12 25-25Z" fill="#212121" />
+  <text x="272" y="118" font-family="Georgia, serif" font-size="30" fill="#212121" text-anchor="middle">Vista previa</text>
+  <text x="272" y="154" font-family="Georgia, serif" font-size="24" font-style="italic" fill="#212121" text-anchor="middle">pendiente</text>
+</svg>
